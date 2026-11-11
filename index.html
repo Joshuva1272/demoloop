@@ -1,12 +1,114 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>FALAJ: How it works</title><style>html,body{margin:0;height:100%;background:#0B2C25;overflow:hidden}iframe{border:0;width:100%;height:100%;display:block}#c{position:fixed;right:22px;bottom:22px;display:flex;gap:10px;align-items:center;transition:opacity .4s;font:500 14px sans-serif;color:#F6F1E4}#c span{background:rgba(13,49,41,.85);padding:10px 14px;border-radius:999px;border:1px solid rgba(248,212,125,.35)}#c button{width:46px;height:46px;border-radius:12px;border:1.5px solid rgba(248,212,125,.6);background:rgba(13,49,41,.9);color:#F8D47D;cursor:pointer;font-size:18px}#p{position:fixed;right:22px;top:22px;display:none;padding:12px 20px;border-radius:999px;border:1.5px solid rgba(248,212,125,.6);background:rgba(13,49,41,.92);color:#F8D47D;font:600 18px monospace}</style></head><body><iframe id="f" src="FALAJ_How_It_Works_loop.html" allow="fullscreen"></iframe><div id="p">&#10074;&#10074; Paused &middot; Space to resume</div><div id="c"><span>Space pause &middot; &larr; &rarr; scenes &middot; F full screen</span><button id="pb" title="Pause (Space)">&#10074;&#10074;</button><button id="fb" title="Full screen (F)">&#9974;</button></div><script>
-const f=document.getElementById('f'),P=document.getElementById('p'),PB=document.getElementById('pb'),C=document.getElementById('c');let w,orig,base=performance.now(),paused=false,pt=0,T=180,SC=[],h;
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>FALAJ: How it works</title><style>html,body{margin:0;height:100%;background:#0B2C25;overflow:hidden}iframe{border:0;width:100%;height:100%;display:block}#c{position:fixed;right:22px;bottom:22px;display:flex;gap:10px;align-items:center;transition:opacity .4s;font:500 14px sans-serif;color:#F6F1E4}#c span{background:rgba(13,49,41,.85);padding:10px 14px;border-radius:999px;border:1px solid rgba(248,212,125,.35)}#c button{min-width:46px;height:46px;border-radius:12px;border:1.5px solid rgba(248,212,125,.6);background:rgba(13,49,41,.9);color:#F8D47D;cursor:pointer;font:600 18px sans-serif;padding:0 10px}#p{position:fixed;right:22px;top:22px;display:none;padding:12px 20px;border-radius:999px;border:1.5px solid rgba(248,212,125,.6);background:rgba(13,49,41,.92);color:#F8D47D;font:600 18px monospace}</style></head><body><iframe id="f" src="FALAJ_How_It_Works_loop.html" allow="fullscreen"></iframe><div id="p"></div><div id="c"><span id="hint"></span><button id="lb" title="English / العربية (A)">ع</button><button id="pb" title="Pause (Space)">&#10074;&#10074;</button><button id="fb" title="Full screen (F)">&#9974;</button></div><script>
+const AR_E={"Data":"البيانات","Clean":"التنظيف","Model":"النموذج","Validation":"التحقق","Nowcast":"التقدير الآني","Backend":"الخلفية","Frontend":"الواجهة","Limits":"الحدود",
+"DATA":"البيانات","MODEL":"النموذج","VALIDATION":"التحقق","BACKEND":"الخلفية","FRONTEND":"الواجهة",
+"India":"الهند","UK":"بريطانيا","Kuwait":"الكويت","China":"الصين","Russia":"روسيا","Germany":"ألمانيا","Italy":"إيطاليا","Aug 24":"أغسطس 24","Aug 25":"أغسطس 25",
+"Flights":"الرحلات","International hotels":"الفنادق: النزلاء الدوليون","Domestic hotels":"الفنادق: النزلاء المحليون",
+"last year":"العام الماضي","× 1.11 trend":"× 1.11 الاتجاه","with trend":"مع الاتجاه","× 1.10 seats":"× 1.10 المقاعد","forecast":"التوقع",
+"DCT data":"بيانات الدائرة","Engine":"المحرك","Results":"النتائج","Export":"التصدير","Build":"البناء","FALAJpage":"صفحة<br>فلج","Browser":"المتصفح",
+"The question":"السؤال","1 · The data":"1 · البيانات","2 · Clean and join":"2 · التنظيف والربط","4 · Validation":"4 · التحقق","6 · Backend":"6 · الخلفية التقنية","7 · Frontend":"7 · الواجهة",
+"Market × month panel":"لوحة السوق × الشهر","α · TREND":"α · الاتجاه العام","β · SEATS":"β · المقاعد","γ · RAMADAN":"γ · رمضان","δ · EID":"δ · العيد","small · not significant":"صغير · غير دال إحصائيًا",
+"Association, not cause":"ارتباط لا سببية","Known seats in testing":"مقاعد معروفة في الاختبار","Trust the total most":"ثِق بالإجمالي أكثر","Shocks need a planner":"الصدمات تحتاج إلى مخطِّط"};
+const AR_P=[
+["How it works · from","كيف يعمل · من بيانات الرحلات إلى قرارات الفنادق"],
+["See demand before it lands.","شاهد الطلب قبل أن يهبط."],
+["How FALAJ turns","كيف يحوّل فلج بيانات رحلات أبوظبي إلى توقعات للطلب الفندقي"],
+["When flights change","عندما تتغيّر الرحلات، ماذا يحدث للطلب الفندقي؟"],
+["FALAJ links","يربط فلج <b>القادمين عبر المطار</b> بـ<b>ليالي النزلاء في الفنادق</b>، قبل أن يحدث التغيير."],
+["Three DCT files go in","ثلاثة ملفات من دائرة الثقافة والسياحة"],
+["rows · AUH arrivals","صفًا · القادمون إلى مطار أبوظبي حسب التاريخ والمصدر وشركة الطيران: المقاعد والركاب والتحويل"],
+["rows · daily guests and new arrivals","صفًا · النزلاء اليوميون والوافدون الجدد لـ 45 جنسية"],
+["rows · daily guests of UAE","صفًا · النزلاء اليوميون من المقيمين في الإمارات"],
+["33 departure countries",'<span class="gold">33</span> دولة مغادرة <span class="gold">↔</span> 33 جنسية في الفنادق'],
+["matched markets cover",'الأسواق المتطابقة تغطي <b class="mint"><span class="cnt" data-in="9" data-to="92.2" data-dec="1" data-d="1.2">0</span>%</b> من ليالي النزلاء الدوليين'],
+["Flights describe","تصف الرحلات <b>عرض</b> المقاعد، وتصف ملفات الفنادق <b>الطلب</b>. ويربط فلج بينهما حسب السوق."],
+["Check the data, then","تحقّق من البيانات، ثم ابنِ لوحة واحدة"],
+["✕ 19 rows removed",'<span class="red">✕</span> <b class="red">حذف 19 صفًا</b>: معامل حمولة فوق 120%، ورحلات خاصة وشحن ومشغّلون مجهولون<br><span class="mint">✓</span> الركاب = المباشرون + التحويل + الترانزيت: <b class="mint">0 أخطاء</b><br><span class="mint">✓</span> لا تكرار · لا وافدين أكثر من النزلاء'],
+["Every market-month","يُقارن كل سوق في كل شهر مع <b>الشهر نفسه من العام السابق</b>، فتدخل الموسمية تلقائيًا."],
+["3 · The forecasting model","3 · نموذج التنبؤ (L2)"],
+["Predict the change","توقّع التغيّر مقارنةً بالعام الماضي"],
+["≈ +11% a year","≈ ‎+11% سنويًا قبل أي تغيير"],
+["10% more seats","زيادة المقاعد 10% ← نحو 5% ليالٍ إضافية"],
+["full Ramadan month","شهر رمضان كامل ← نحو 25% أقل"],
+["Worked example",'مثال تطبيقي · سوق بزيادة <b class="gold">20% في المقاعد</b> ورمضان دون تغيير'],
+["Weighted least squares","المربعات الصغرى الموزونة على التغيرات السنوية اللوغاريتمية: <b>بسيط، قابل للتفسير، قابل للاختبار</b>."],
+["Tested on months","اختُبر على أشهر لم يرها من قبل"],
+["Train on the past",'تدريب على الماضي ← توقّع الشهر التالي ← مقارنة بالواقع · <b class="gold" id="orig">المنطلق 1 من 19</b>'],
+["Error on the Abu Dhabi monthly total","الخطأ في الإجمالي الشهري لأبوظبي · الأقل أفضل"],
+["Per market:",'لكل سوق: <b class="gold">18.5%</b> مقابل 24.3% لنهج العام الماضي'],
+["80% ranges held",'نطاقات 80% احتوت <b class="mint">80%</b> من النتائج الفعلية'],
+["Placebo:",'اختبار وهمي: مقاعد العام التالي ≈ <b class="mint">0</b> (−0.07)'],
+["19 rolling forecasts","19 توقعًا متتاليًا، يناير 2024 – يوليو 2025، باستخدام <b>جدول المقاعد المعروف</b> لكل شهر."],
+["5 · Second engine","5 · المحرك الثاني: التقدير اليومي الآني"],
+["Guests today =","نزلاء اليوم = من وصلوا ولم يغادروا بعد"],
+["International daily error",'الخطأ اليومي للنزلاء الدوليين <b class="gold" style="font-size:34px">12.7%</b> مقابل 29.8% لنفس اليوم من العام الماضي'],
+["Domestic daily error",'الخطأ اليومي للنزلاء المحليين <b class="gold" style="font-size:34px">8.4%</b> مقابل 19.9% لنفس اليوم من العام الماضي'],
+["Used only when arrivals","يُستخدم فقط عندما تكون أعداد الوافدين معروفة · ويغطي فترة الاختبار <b>أغسطس 2025 – فبراير 2026</b>."],
+["One command rebuilds","أمر واحد يعيد بناء كل شيء"],
+["forecasts · ranges","التوقعات · النطاقات<br>الاختبارات الرجعية · الدرجات"],
+["template + JSON",'القالب + JSON<br>← صفحة HTML واحدة'],
+["python refresh_all.py",'<span class="pill" dir="ltr">python refresh_all.py</span> <span class="p" style="font-size:22px">&nbsp;· نحو 3–4 دقائق</span>'],
+["Local server","خادم محلي · FastAPI على المنفذ 8000"],
+["GET /api/meta",'<span class="mint">GET</span> /api/meta · <span class="mint">GET</span> /api/data<br>← أحدث مخرجات المحرك<br><span class="gold">POST</span> /api/admin/refit ← إعادة تشغيل المسار'],
+["loads live data",'يحمّل البيانات الحية إذا كان الخادم يعمل؛<br>وإلا يستخدم <span class="gold">نسخته المدمجة</span>،<br>فيعمل دائمًا دون إنترنت'],
+["New month of data?","شهر جديد من البيانات؟ استبدل الملفات وشغّل أمرًا واحدًا، فتتحدّث كل الشاشات."],
+["Four screens for a planner","أربع شاشات للمخطِّط"],
+["Market Radar","رادار الأسواق<small>أي الأسواق مهمة هذا الشهر: التوقع ونطاق 80% ودرجة الثقة لكل سوق</small>"],
+["Scenario Studio","استوديو السيناريوهات<small>غيّر المقاعد أو الرحلات أو الخطوط أو التوقف المؤقت وشاهد الأثر الفندقي مع نطاق</small>"],
+["Decision Card","بطاقة القرار<small>النتيجة في صفحة واحدة، جاهزة للتصدير PNG أو PDF</small>"],
+["Evidence Lab","مختبر الأدلة<small>الاختبارات الرجعية والمرونات وإعادة التشغيل والحدود المعلنة</small>"],
+["English ⇄","English ⇄ العربية<small>تنقلب الواجهة كاملةً إلى العربية، من اليمين إلى اليسار</small>"],
+["CHINA · DEC 2025","الصين · ديسمبر 2025 · ‎+7% مقاعد"],
+["+2,998",'+2,998 <span class="p" style="font-size:24px">ليلة نزيل</span>'],
+["range +2,705",'النطاق ‎+2,705 إلى ‎+3,292 · يُحسب داخل الصفحة:<br><span class="mono gold" dir="ltr" style="font-size:21px;display:inline-block">ΔGN = GN × ((Seats′/Seats)<sup>β</sup> − 1)</span>'],
+["8 · Honest by design","8 · الشفافية أساس التصميم"],
+["What the numbers mean","ما تعنيه الأرقام، وما لا تعنيه"],
+["Airlines add seats","تضيف شركات الطيران المقاعد حيث ينمو الطلب أصلًا. نعرض العلاقة ونطاقها، لا ضمانًا."],
+["The back-test uses","يستخدم الاختبار الرجعي الجدول الفعلي لكل شهر. وفي التخطيط، خطة المقاعد مُدخلٌ من المخطِّط."],
+["About 6% error","نحو 6% خطأ في إجمالي أبوظبي، ونحو 18% لسوق منفرد. وتوضح الدرجات A/B/C أيها أجدر بالثقة."],
+["Events like the 2026","أحداث مثل اضطرابات 2026 ليست في البيانات. يُدخل المخطِّطون المقاعد التي يتوقعونها."],
+["Team UE Sirb","فريق UE Sirb · ATP 2026 · مسار دائرة الثقافة والسياحة"]].sort((a,b)=>b[0].length-a[0].length);
+const AR_S={"AUH":"مطار أبوظبي","Abu Dhabi hotels":"فنادق أبوظبي","same month last year":"الشهر نفسه من العام الماضي","Jan 23":"يناير 23","Jan 24":"يناير 24","Jan 25":"يناير 25","Jan 26":"يناير 26",
+"Same month last year":"الشهر نفسه من العام الماضي","Last year × seats":"العام الماضي × المقاعد","Growth + calendar":"النمو + التقويم","FALAJ model (L2)":"نموذج فلج (L2)",
+"Daily new arrivals":"الوافدون الجدد يوميًا","Stay pattern (days since arrival)":"نمط الإقامة (أيام منذ الوصول)","Guests in hotels each day":"النزلاء في الفنادق يوميًا"};
+const AR_LEG='<tspan fill="#9BECC1">■</tspan> بيانات التدريب   <tspan fill="#F8D47D">■</tspan> شهر التوقع';
+const AR_CSS="html.ar #stage [data-tr],html.ar #stage svg text[data-tr]{font-family:'Noto Kufi Arabic','IBM Plex Sans Arabic',sans-serif!important;letter-spacing:0!important;text-transform:none!important}html.ar #stage .h[data-tr]{font-size:54px!important;line-height:1.3!important}html.ar #stage .k[data-tr]{font-size:21px!important}html.ar #stage .cap[data-tr]{font-size:27px!important}html.ar #stage [data-tr] .pill,html.ar #stage .pill[data-tr]{letter-spacing:0}html.ar #stage .lst div[data-tr]{border-left:0;border-right:4px solid rgba(255,255,255,.12);padding:16px 26px 16px 0}html.ar #stage .lst div.on[data-tr]{border-right-color:#F8D47D}";
+
+const f=document.getElementById('f'),P=document.getElementById('p'),PB=document.getElementById('pb'),LB=document.getElementById('lb'),HI=document.getElementById('hint'),C=document.getElementById('c');
+let w,d,orig,base=performance.now(),paused=false,pt=0,T=180,SC=[],h,ar=false;
+try{ar=new URLSearchParams(location.search).get('lang')==='ar'||localStorage.getItem('falajLang')==='ar'}catch(e){}
+const UI={en:{hint:'Space pause \u00b7 \u2190 \u2192 scenes \u00b7 F full screen \u00b7 A \u0639\u0631\u0628\u064a',pause:'&#10074;&#10074; Paused \u00b7 Space to resume',lb:'\u0639'},ar:{hint:'\u0627\u0644\u0645\u0633\u0627\u0641\u0629 \u0625\u064a\u0642\u0627\u0641 \u00b7 \u2190 \u2192 \u0627\u0644\u0645\u0634\u0627\u0647\u062f \u00b7 F \u0645\u0644\u0621 \u0627\u0644\u0634\u0627\u0634\u0629 \u00b7 A English',pause:'&#10074;&#10074; \u0645\u062a\u0648\u0642\u0641 \u00b7 \u0627\u0636\u063a\u0637 \u0627\u0644\u0645\u0633\u0627\u0641\u0629 \u0644\u0644\u0645\u062a\u0627\u0628\u0639\u0629',lb:'EN'}};
+function ui(){const u=UI[ar?'ar':'en'];HI.innerHTML=u.hint;P.innerHTML=u.pause;LB.textContent=u.lb;HI.dir=ar?'rtl':'ltr';P.dir=ar?'rtl':'ltr';P.style.fontFamily=ar?'Tahoma,"Segoe UI",sans-serif':''}
+const norm=s=>s.replace(/\s+/g,' ').trim();
+const INL=new Set(['B','SPAN','BR','SUB','SUP','I','SMALL']);
+function applyLang(){if(!d)return;const st=d.getElementById('stage');d.documentElement.classList.toggle('ar',ar);
+ if(!d.getElementById('arcss')){const s=d.createElement('style');s.id='arcss';s.textContent=AR_CSS;d.head.appendChild(s)}
+ if(ar){
+  st.querySelectorAll('*').forEach(e=>{if(e.closest('svg')||e.closest('[data-tr]')||!e.textContent.trim())return;if([...e.children].some(c=>!INL.has(c.tagName)))return;
+   const k=norm(e.textContent);let tr=AR_E[k];if(tr===undefined){const m=AR_P.find(([p])=>k.startsWith(p));if(m)tr=m[1]}
+   if(tr===undefined)return;e._en=e.innerHTML;e.innerHTML=tr;e.setAttribute('data-tr','');if(!e.closest('.eq'))e.dir='rtl'});
+  st.querySelectorAll('svg text').forEach(t=>{if(t.hasAttribute('data-tr'))return;const k=t.textContent.trim();let tr=AR_S[k];
+   if(k.startsWith('\u25a0')){t._en=t.innerHTML;t.innerHTML=AR_LEG;t.setAttribute('data-tr','');return}
+   if(tr){t._en=t.innerHTML;t.textContent=tr;t.setAttribute('data-tr','')}});
+ }else{st.querySelectorAll('[data-tr]').forEach(e=>{e.innerHTML=e._en;e.removeAttribute('data-tr');e.removeAttribute('dir')})}
+ if(orig)orig(now());ui();try{localStorage.setItem('falajLang',ar?'ar':'en')}catch(e){}}
+function fixFrame(){if(!ar||!d)return;const o=d.getElementById('orig');if(o){const m=o.textContent.match(/origin (\d+) of 19/);if(m)o.textContent='\u0627\u0644\u0645\u0646\u0637\u0644\u0642 '+m[1]+' \u0645\u0646 19'}}
+
+let simF=null,simTab=-1,simCool=0;
+function setupSim(){const sh=d.getElementById('shots');if(!sh||simF)return;sh.querySelectorAll('.shot').forEach(i=>i.style.display='none');
+ const sf=d.createElement('iframe');sf.src='/Falaj/simulator/AERIVA_Simulator.html'+(ar?'?lang=ar':'');
+ sf.style.cssText='position:absolute;left:0;top:0;width:1600px;height:900px;border:0;transform:scale(.675);transform-origin:0 0;pointer-events:none;background:#F2F4EF';sh.appendChild(sf);simF=sf;sf.addEventListener('load',()=>{simTab=-1})}
+function simSync(t){if(!simF)return;let sd;try{sd=simF.contentDocument}catch(e){return}if(!sd||!sd.getElementById('tabs'))return;
+ const lt=t-141;if(lt<-2||lt>26)return;const seg=lt<6.5?0:lt<13.5?1:lt<17.5?2:lt<21.5?3:4;const want=seg===4?0:seg;const wantAr=ar||seg===4;
+ const bs=sd.querySelectorAll('#tabs button');if(bs.length&&simTab!==want){bs[want].click();simTab=want}
+ const isAr=sd.documentElement.lang==='ar';const nowMs=performance.now();
+ if(isAr!==wantAr&&nowMs>simCool){const lb=sd.getElementById('langbtn');if(lb){lb.click();simCool=nowMs+2500;simTab=-1}}}
 function now(){return paused?pt:((performance.now()-base)/1000)%T}
 function setP(v){if(v===paused)return;if(v){pt=now();paused=true}else{paused=false;base=performance.now()-pt*1000}P.style.display=paused?'block':'none';PB.innerHTML=paused?'&#9654;':'&#10074;&#10074;'}
-function jump(t){t=((t%T)+T)%T;if(paused)pt=t;else base=performance.now()-t*1000;if(orig)orig(t)}
+function jump(t){t=((t%T)+T)%T;if(paused)pt=t;else base=performance.now()-t*1000;if(orig){orig(t);fixFrame();simSync(t)}}
 function fs(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen()}
-function key(e){if(e.code==='Space'){e.preventDefault();setP(!paused)}else if(e.key==='f'||e.key==='F'){e.preventDefault();fs()}else if(e.key==='ArrowRight'){e.preventDefault();const t=now(),n=SC.find(x=>x[1]>t+.05);jump(n?n[1]:0)}else if(e.key==='ArrowLeft'){e.preventDefault();const t=now(),c=[...SC].reverse().find(x=>x[1]<=t-1.5);jump(c?c[1]:0)}}
-function show(){C.style.opacity=1;document.body.style.cursor='default';clearTimeout(h);h=setTimeout(()=>{C.style.opacity=0},2500)}
-f.addEventListener('load',()=>{w=f.contentWindow;orig=w.seek;try{SC=w.eval('SC');T=w.eval('T')}catch(e){}base=performance.now();w.seek=function(){orig(now())};w.addEventListener('keydown',key);w.document.addEventListener('click',()=>setP(!paused));w.addEventListener('mousemove',show);f.focus()});
-addEventListener('keydown',key);addEventListener('mousemove',show);show();
-PB.onclick=()=>{setP(!paused);f.focus()};document.getElementById('fb').onclick=()=>{fs();f.focus()};
+function key(e){if(e.code==='Space'){e.preventDefault();setP(!paused)}else if(e.key==='f'||e.key==='F'){e.preventDefault();fs()}else if(e.key==='a'||e.key==='A'){e.preventDefault();ar=!ar;applyLang()}else if(e.key==='ArrowRight'){e.preventDefault();const t=now(),n=SC.find(x=>x[1]>t+.05);jump(n?n[1]:0)}else if(e.key==='ArrowLeft'){e.preventDefault();const t=now(),c=[...SC].reverse().find(x=>x[1]<=t-1.5);jump(c?c[1]:0)}}
+function show(){C.style.opacity=1;clearTimeout(h);h=setTimeout(()=>{C.style.opacity=0},2500)}
+f.addEventListener('load',()=>{w=f.contentWindow;d=f.contentDocument;orig=w.seek;try{SC=w.eval('SC');T=w.eval('T')}catch(e){}base=performance.now();w.seek=function(){const t=now();orig(t);fixFrame();simSync(t)};setupSim();w.addEventListener('keydown',key);d.addEventListener('click',()=>setP(!paused));w.addEventListener('mousemove',show);if(ar)applyLang();f.focus()});
+addEventListener('keydown',key);addEventListener('mousemove',show);show();ui();
+PB.onclick=()=>{setP(!paused);f.focus()};LB.onclick=()=>{ar=!ar;applyLang();f.focus()};document.getElementById('fb').onclick=()=>{fs();f.focus()};
 </script></body></html>
